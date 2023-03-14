@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>js改变点位</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+
+      #canvas {
+        background-color: antiquewhite;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvas"></canvas>
+    <!-- 顶点着色器 -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+      attribute vec4 a_Position;
+      void main(){
+          //点位
+          gl_Position=a_Position;
+          //尺寸
+          gl_PointSize=50.0;
+      }
+    </script>
+    <!-- 片元着色器 -->
+    <script id="fragmentShader" type="x-shader/x-fragment">
+      void main(){
+          gl_FragColor=vec4(1,1,0,1);
+      }
+    </script>
+    <script type="module">
+      import { initShaders } from "../../mod/jsm/Utils.js";
+
+      const canvas = document.querySelector("#canvas");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // 获取着色器文本
+      const vsSource = document.querySelector("#vertexShader").innerText;
+      const fsSource = document.querySelector("#fragmentShader").innerText;
+
+      //三维画笔
+      const gl = canvas.getContext("webgl");
+
+      //初始化着色器
+      initShaders(gl, vsSource, fsSource);
+
+      //设置attribute 变量
+      const a_Position = gl.getAttribLocation(gl.program, "a_Position");
+
+      const a_Points = [
+        { x: -0.3, y: 0 },
+      ];
+
+      render()
+      
+
+      // 鼠标点击事件
+      canvas.addEventListener("click", ({ clientX, clientY }) => {
+        const { left, top } = canvas.getBoundingClientRect();
+        // (cssX, cssY) 即是canvas 2d坐标系对应的点
+        const [cssX, cssY] = [clientX - left, clientY - top];
+
+        // 找到canvas 2d 画布的中心点（也就是webgl的坐标原点）
+        const [halfW, halfH] = [canvas.width / 2, canvas.height / 2];
+
+        // 这里记 canvas 原点为O(x0, y0), webgl坐标原点为 B(xb, yb), 鼠标点击的点在canvas 2d中的坐标为 C(x1, y1)
+        // 那么 B 与 C 的距离，通过勾股定理得到的 xl = x1- xb, yl = y1 - xb,
+        // 那么 点 X(xl, yl) 就是以 webgl原点B为坐标原点的点
+        const [xl, yl] = [cssX - halfW, cssY - halfH];
+
+        // y 轴 取反
+        const ylTop = -yl;
+
+        const [x, y] = [xl / halfW, ylTop / halfH];
+        // gl.vertexAttrib2f(a_Position, x, y);
+        // gl.clear(gl.COLOR_BUFFER_BIT);
+        // gl.drawArrays(gl.POINTS, 0, 1);
+        a_Points.push({x, y})
+        render()
+      });
+
+      function render() {
+        // 清除颜色缓冲
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        // 根据数据重新绘制
+        a_Points.forEach(p => {
+          gl.vertexAttrib2f(a_Position, p.x, p.y)
+          gl.drawArrays(gl.POINTS, 0, 1);
+        })
+      }
+    </script>
+  </body>
+</html>

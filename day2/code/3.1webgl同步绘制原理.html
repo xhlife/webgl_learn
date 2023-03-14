@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>js改变点位</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+
+      #canvas {
+        background-color: antiquewhite;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvas"></canvas>
+    <!-- 顶点着色器 -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+      attribute vec4 a_Position;
+      void main(){
+          //点位
+          gl_Position=a_Position;
+          //尺寸
+          gl_PointSize=50.0;
+      }
+    </script>
+    <!-- 片元着色器 -->
+    <script id="fragmentShader" type="x-shader/x-fragment">
+      void main(){
+          gl_FragColor=vec4(1,1,0,1);
+      }
+    </script>
+    <script type="module">
+      import { initShaders } from "../../mod/jsm/Utils.js";
+
+      const canvas = document.querySelector("#canvas");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // 获取着色器文本
+      const vsSource = document.querySelector("#vertexShader").innerText;
+      const fsSource = document.querySelector("#fragmentShader").innerText;
+
+      //三维画笔
+      const gl = canvas.getContext("webgl");
+
+      //初始化着色器
+      initShaders(gl, vsSource, fsSource);
+
+      const a_Points = [
+        { x: -0.3, y: 0 },
+        { x: 0.3, y: 0 },
+      ];
+      //设置attribute 变量
+      const a_Position = gl.getAttribLocation(gl.program, "a_Position");
+
+      //声明颜色 rgba
+      gl.clearColor(0, 0, 0, 1);
+      //刷底色
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      render()
+
+      setTimeout(() => {
+        a_Points.push({x: 0.6, y: 0})
+        render()
+      }, 2000)
+
+      function render() {
+        // 清除颜色缓冲
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        // 根据数据重新绘制
+        a_Points.forEach(p => {
+          gl.vertexAttrib2f(a_Position, p.x, p.y)
+          gl.drawArrays(gl.POINTS, 0, 1);
+        })
+      }
+    </script>
+  </body>
+</html>
