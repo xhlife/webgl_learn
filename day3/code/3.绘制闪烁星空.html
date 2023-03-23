@@ -46,6 +46,8 @@
     </script>
     <script type="module">
       import { initShaders } from "../../mod/jsm/Utils.js";
+      import Compose from "../../mod/jsm/Compose.js";
+      import Track from "../../mod/jsm/Track.js";
 
       const canvas = document.querySelector("#canvas");
       canvas.width = window.innerWidth;
@@ -57,6 +59,9 @@
 
       //三维画笔
       const gl = canvas.getContext("webgl");
+      // 开启颜色混合， 否则绘制片元的透明度,这样动画就失效了
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
       //初始化着色器
       initShaders(gl, vsSource, fsSource);
@@ -65,9 +70,13 @@
       const a_Position = gl.getAttribLocation(gl.program, "a_Position");
       const a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
       const u_FragColor = gl.getUniformLocation(gl.program, "u_FragColor");
-      const a_Points = [
+      // 星星点集合
+      const stars = [
         // { x: -0.3, y: 0, size: 10.0, color: { r: 1, g: 0, b: 0, a: 1 } },
       ];
+
+      // 合成对象
+      const compose = new Compose();
 
       render();
 
@@ -88,23 +97,45 @@
         // y 轴 取反
         const ylTop = -yl;
 
+        // 解决坐标基地差异
         const [x, y] = [xl / halfW, ylTop / halfH];
-        // gl.vertexAttrib2f(a_Position, x, y);
-        // gl.clear(gl.COLOR_BUFFER_BIT);
-        // gl.drawArrays(gl.POINTS, 0, 1);
-        const size = Math.random() * 5 + 2;
-        const a = Math.random();
-        // const color = { r: n, g: n, b: 1, a: 1 };
-        a_Points.push({ x, y, size, a });
 
-        render();
+        const size = Math.random() * 5 + 2;
+        const a = 1;
+
+        const obj = { x, y, size, a };
+        stars.push(obj);
+
+        //建立轨道对象
+        const track = new Track(obj);
+        track.start = new Date();
+        track.timeLen = 2000;
+        track.loop = true;
+        track.keyMap = new Map([
+          [
+            "a",
+            [
+              [500, a],
+              [1000, 0],
+              [1500, a],
+            ],
+          ],
+        ]);
+        compose.add(track);
+        // render();
       });
+
+      !(function ani() {
+        compose.update(new Date());
+        render();
+        requestAnimationFrame(ani);
+      })();
 
       function render() {
         // 清除颜色缓冲
         gl.clear(gl.COLOR_BUFFER_BIT);
         // 根据数据重新绘制
-        a_Points.forEach((p) => {
+        stars.forEach((p) => {
           // 设置位置
           gl.vertexAttrib2f(a_Position, p.x, p.y);
           // 设置大小

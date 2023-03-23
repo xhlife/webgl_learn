@@ -1,70 +1,22 @@
-### 补间动画
-
-补间动画的概念： 补间动画指的是做动画时，在两个关键帧中间需要做“补间动画”，才能实现图画的运动；插入补间动画后两个关键帧之间的插补帧是由计算机自动运算而得到的。
-
-关键帧： 其实就是两个时间节点的状态， 比如颜色在 1s 时是透明的，在 2 秒时是白色的, 关键帧就是 1s, opacity: 0, 2s opacity: 1
-
-合成： 多个对象的动画时间线(时间线：也可以说关键帧)的集合。 一个动画，可能存在多个对象，每一个对象做不同的动画，从而合成一个完整的动画
-
-时间线（时间轨）：通过关键帧，对目标对象的状态进行插值操作。关键帧形成的时间线，比如， 1s-3s 背景白色， 3s-10s 背景黑色。那么可以在这四个关键帧中加入更多的关键帧，而其他的帧(补间动画)由计算机自动计算
-
-### 通过 js 实现上面的架构
-
-#### 合成对象
-
-类似 dom tree 的解构
-
-```js
-export default class Compose {
-  constructor() {
-    this.parent = null; // 父对象， 合成对象可以互相嵌套
-    this.children = []; // 子对象集合, 其集合元素可以是时间轨，也可以是合成对象
-  }
-  /**
-   * @desc  添加子对象
-   */
-  add(obj) {
-    obj.parent = this;
-    this.children.push(obj);
-  }
-  /**
-   * @desc  基于当前时间更新子对象状态的方法
-   */
-  update(t) {
-    this.children.forEach((ele) => {
-      // 传递时间作为参数，需要基于时间做动画更新
-      ele.update(t);
-    });
-  }
-}
-```
-
-#### 时间轨(时间线)
-
-从上面的概念，可以知道时间轨是描述合成对象的关键帧集合，
-因此， 它有一个目标对象，时间起点，持续时间(时间结点)，帧集合这三个最基本的属性
-
-```js
 export default class Track {
   constructor(target) {
     this.target = target; // 合成对象目标
     this.parent = null; // 父级对象
     this.start = 0; // 时间起点(时间轨建立的时间)
-    this.timeLen = 5; // 时间轨道总时长
+    this.timeLen = 5; // 时间轨道总时长 默认5
     this.loop = false; // 是否循环
     this.keyMap = new Map(); // 关键帧集合
     /*
-      // 每一帧的数据结构
       [
        [
-        '对象属性1'，
+        '对象属性1Opacity'，
         [
           [时间1， 属性值]， // 关键帧
           [时间2， 属性值], // 关键帧
         ]
        ],
        [
-        '对象属性2'，
+        '对象属性2；width'，
         [
           [时间1， 属性值]， // 关键帧
           [时间2， 属性值], // 关键帧
@@ -77,19 +29,18 @@ export default class Track {
    * @desc 单个时间轨的更新函数
    */
   /*
-    // 逻辑
-    // 遍历关键帧集合：
+    逻辑
+    遍历关键帧集合：
     * 若本地时间小于第一个帧的时间， 目标对象的状态等于第一帧的状态
     * 若本地时间大于最后一帧的时间，目标对象的状态等于最后一帧的状态
     * 否则，计算
   */
   update(t) {
-    const { keyMap, timeLen, target, loop } = this;
+    const { keyMap, timeLen, target, loop, start } = this;
     // time就是一个时间点，也叫动画的本地时间，用于判断动画应该取哪一帧
     // 比如, start = 0; 帧集合中有三个关键帧[1s, 2s, 3s]
     // 那么 update(1), 表示执行， 0 - 1秒的补间动画
-
-    let time = t - this.start;
+    let time = t - start;
     // 如果是循环动画，在 timeLen后，重置时间
     // 比如  1s的循环动画, 时间轨总时长为 5， 1 % 5 = 1
     // time = 1 还是表示 进行 0-1的补间动画
@@ -97,7 +48,7 @@ export default class Track {
       time = time % timeLen;
     }
     // fms 帧数据，包含关键帧的始末时间和属性
-    for (const [key, fms] of keyMap.entries()) {
+    for (const [key, fms] of keyMap) {
       const last = fms.length - 1;
       // 如果time 小于 第一个关键帧fms[0][0]的时间
       if (time < fms[0][0]) {
@@ -115,7 +66,7 @@ export default class Track {
 }
 
 /**
- * @desc 获取两个关键帧之间状态的方法
+ * @desc 补间算法
  * @param time 本地时间(处于fms[0][0]与fms[last][0]之间）
  * @param fms 某个属性的关键帧集合
  * @param last 最后一个关键帧的索引位置(即 fms.length - 1)
@@ -131,15 +82,16 @@ function getValBetweenFms(time, fms, last) {
     const fm2 = fms[i + 1];
 
     if (time >= fm1[0] && time <= fm2[0]) {
+      // y = kx + b 点斜式
       const delta = {
         x: fm2[0] - fm1[0],
         y: fm2[1] - fm1[1],
       };
-      // y = kx + b 直线匀速运动
+      // 斜率， 描述直线的倾斜程度 k = (y2- y1) / (x2 - x1)
       const k = delta.y / delta.x;
+      // 截距， 直线与 y轴交点的值 b = y - kx
       const b = fm1[1] - fm1[0] * k;
       return k * time + b;
     }
   }
 }
-```
