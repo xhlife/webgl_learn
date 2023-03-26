@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+      #canvas {
+        background-color: antiquewhite;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <script id="vertexShader" type="x-shader/x-vertex">
+      attribute vec4 a_Position;
+      void main(){
+        //点位
+        gl_Position = a_Position;
+      }
+    </script>
+
+    <script id="fragmentShader" type="x-shader/x-fragment">
+      void main() {
+        gl_FragColor = vec4(1,0,0,1);
+      }
+    </script>
+
+    <script type="module">
+      import { initShaders } from "../../mod/jsm/Utils.js";
+
+      const canvas = document.querySelector("#canvas");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      // 获取着色器程序
+      const vsSource = document.querySelector("#vertexShader").innerText;
+      const fsSource = document.querySelector("#fragmentShader").innerText;
+
+      const gl = canvas.getContext("webgl");
+      initShaders(gl, vsSource, fsSource);
+
+      // 绘制多点
+      // 1
+      const vertices = new Float32Array([
+        // 顶点坐标，根据webgl坐标系，可得到这是一个三角形的三个顶点
+        0.0, 0.1, -0.1, -0.1, 0.1, -0.1, 0.5, 0.5,
+      ]);
+
+      //  2
+      const vertexBuffer = gl.createBuffer();
+      // 3
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      // 4
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+      // 5
+      const a_Position = gl.getAttribLocation(gl.program, "a_Position");
+      // gl.vertexAttrib3f(a_Position,0.5,0.5,0.0);
+      // 这里与之前一个点一个点的赋值不同
+      gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+
+      // 6
+      gl.enableVertexAttribArray(a_Position);
+      //声明颜色 rgba
+      gl.clearColor(0, 0, 0, 1);
+      //刷底色
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      //绘制面
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    </script>
+  </body>
+</html>
