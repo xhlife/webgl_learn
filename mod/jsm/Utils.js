@@ -28,4 +28,30 @@ function loadShader(gl, type, source) {
   return shader;
 }
 
-export { initShaders };
+function getMousePosInWebgl(event, canvas) {
+  // 获取鼠标在浏览器二维坐标的位置
+  const { clientX, clientY } = event;
+  // 获取 canvas 在浏览器二维中左上角的坐标位置
+  const { left, top } = canvas.getBoundingClientRect();
+
+  // 鼠标在canvas 二维坐标中的位置
+  const [cssX, cssY] = [clientX - left, clientY - top];
+
+  // webgl 坐标原点(即canvas 2d的画布中心)
+  const [halfW, halfH] = [canvas.width / 2, canvas.height / 2];
+
+  // 这里记 canvas 原点为O(x0, y0), webgl坐标原点为 B(xb, yb), 鼠标点击的点在canvas 2d中的坐标为 C(x1, y1)
+  // 那么 B 与 C 的距离，通过勾股定理得到的 xl = x1- xb, yl = y1 - xb,
+  // 那么 点 X(xl, yl) 就是以 webgl原点B为坐标原点的点
+  const [xl, yl] = [cssX - halfW, cssY - halfH];
+
+  // y 轴 取反
+  const ylTop = -yl;
+
+  // 分量归一化，基底差异处理
+  const [x, y] = [xl / halfW, ylTop / halfH];
+
+  return { x, y };
+}
+
+export { initShaders, getMousePosInWebgl };
