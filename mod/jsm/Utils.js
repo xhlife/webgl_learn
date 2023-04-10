@@ -54,4 +54,12 @@ function getMousePosInWebgl(event, canvas) {
   return { x, y };
 }
 
-export { initShaders, getMousePosInWebgl };
+function glToCssPos({x,y},{width,height}){
+  const [halfWidth, halfHeight] = [width / 2, height / 2]
+  return {
+    x:x*halfWidth,
+    y:-y*halfHeight
+  }
+}
+
+export { initShaders, getMousePosInWebgl, glToCssPos };
