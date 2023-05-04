@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>缩放</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #canvas {
+        background-color: antiquewhite;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <!-- 顶点着色器 -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+      attribute vec4 a_Position;
+      uniform float u_Scale;
+      void main(){
+        gl_Position=vec4(vec3(a_Position)*u_Scale,1.0);
+        gl_PointSize = 10.0;
+      }
+    </script>
+    <!-- 片元着色器 -->
+    <script id="fragmentShader" type="x-shader/x-fragment">
+      void main(){
+          gl_FragColor=vec4(1,1,0,1);
+      }
+    </script>
+
+    <script type="module">
+      import { initShaders } from "../../mod/jsm/Utils.js";
+
+      const canvas = document.querySelector("#canvas");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // 获取着色器文本
+      const vsSource = document.querySelector("#vertexShader").innerText;
+      const fsSource = document.querySelector("#fragmentShader").innerText;
+
+      //三维画笔
+      const gl = canvas.getContext("webgl");
+
+      //初始化着色器
+      initShaders(gl, vsSource, fsSource);
+
+      // // 例一、简单一个点缩放
+      // // 顶点数据
+      // const a_Position = gl.getAttribLocation(gl.program, "a_Position");
+      // gl.vertexAttrib3f(a_Position, 0.5, 0.5, 0);
+      // // 缩放系数
+      // // 获取Uniform变量
+      // const u_Scale = gl.getUniformLocation(gl.program, "u_Scale");
+      // // 修改uniform 变量
+      // gl.uniform1f(u_Scale, 0.5);
+
+      // gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      // gl.clear(gl.COLOR_BUFFER_BIT);
+      // gl.drawArrays(gl.POINTS, 0, 1);
+
+      // // 例二、三角形的缩放
+
+      // const vertices = new Float32Array([0.3, 0.3, 0.2, 0.2, 0.4, 0.2]);
+      // const vertexBuffer = gl.createBuffer();
+      // gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      // gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+      // const a_Position = gl.getAttribLocation(gl.program, "a_Position");
+      // gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+      // gl.enableVertexAttribArray(a_Position);
+
+      // // 缩放系数
+      // // 获取Uniform变量
+      // const u_Scale = gl.getUniformLocation(gl.program, "u_Scale");
+      // // 修改uniform 变量
+      // gl.uniform1f(u_Scale, 1.5);
+
+      // gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      // gl.clear(gl.COLOR_BUFFER_BIT);
+
+      // gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      // 例三、简单缩放动画
+      // [0.3, 0.3, 0.2, 0.2, 0.4, 0.2]
+      const vertices = new Float32Array([0.0, 0.1, -0.1, -0.1, 0.1, -0.1]);
+
+      const vertexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+      const a_Position = gl.getAttribLocation(gl.program, "a_Position");
+      gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Position);
+
+      const u_Scale = gl.getUniformLocation(gl.program, "u_Scale");
+      gl.uniform1f(u_Scale, 1);
+
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      let step = 0;
+      !(function ani() {
+        step += 0.05;
+        const scale = Math.sin(step) + 1;
+        gl.uniform1f(u_Scale, scale);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        requestAnimationFrame(ani);
+      })();
+    </script>
+  </body>
+</html>
