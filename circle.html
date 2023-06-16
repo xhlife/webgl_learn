@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .circle-container {
+        width: 200px;
+        height: 200px;
+        position: relative;
+      }
+      .circle-background {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        /* background-color: gray; */
+      }
+      .circle-foreground {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        clip-path: polygon(100px 0, 200px 0, 200px 200px, 100px 200px);
+        animation: change-clip ease-in-out 2s infinite;
+      }
+      .circle-foreground::before {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 10px solid #fff;
+        border-top-color: #ccc;
+        transform: rotate(-45deg);
+        animation: circle-anim ease-in-out 2s infinite;
+        box-sizing: border-box;
+      }
+
+      @keyframes circle-anim {
+        0% {
+          transform: rotate(-45deg);
+        }
+        100% {
+          transform: rotate(270deg);
+        }
+      }
+      @keyframes change-clip {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(225deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="circle-container">
+      <div class="circle-background"></div>
+      <div class="circle-foreground"></div>
+    </div>
+  </body>
+</html>
