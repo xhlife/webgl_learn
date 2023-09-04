@@ -54,12 +54,12 @@ function getMousePosInWebgl(event, canvas) {
   return { x, y };
 }
 
-function glToCssPos({x,y},{width,height}){
-  const [halfWidth, halfHeight] = [width / 2, height / 2]
+function glToCssPos({ x, y }, { width, height }) {
+  const [halfWidth, halfHeight] = [width / 2, height / 2];
   return {
-    x:x*halfWidth,
-    y:-y*halfHeight
-  }
+    x: x * halfWidth,
+    y: -y * halfHeight,
+  };
 }
 
 // 轴映射
@@ -75,4 +75,28 @@ function ScaleLinear(ax, ay, bx, by) {
   };
 }
 
-export { initShaders, getMousePosInWebgl, glToCssPos, ScaleLinear };
+// 正弦函数
+function SinFn(a, Omega, phi) {
+  return function (x) {
+    return a * Math.sin(Omega * x + phi);
+  };
+}
+
+/* GetIndexInGrid 
+  在由一维数组建立的栅格矩阵中，基于行列获取元素的索引位置 
+*/
+
+function GetIndexInGrid(w, size) {
+  return function (x, y) {
+    return (y * w + x) * size;
+  };
+}
+
+export {
+  initShaders,
+  getMousePosInWebgl,
+  glToCssPos,
+  ScaleLinear,
+  SinFn,
+  GetIndexInGrid,
+};
