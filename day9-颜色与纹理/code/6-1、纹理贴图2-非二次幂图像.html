@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
   <head>
     <meta charset="UTF-8" />
-    <title>纹理对象</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>纹理-非二次幂图像</title>
     <style>
       body {
         margin: 0;
@@ -10,16 +11,15 @@
       }
     </style>
   </head>
-
   <body>
     <canvas id="canvas"></canvas>
     <script id="vertexShader" type="x-shader/x-vertex">
       attribute vec4 a_Position;
       attribute vec2 a_Pin;
       varying vec2 v_Pin;
-      void main(){
+      void main() {
         gl_Position = a_Position;
-        v_Pin=a_Pin;
+        v_Pin = a_Pin;
       }
     </script>
     <script id="fragmentShader" type="x-shader/x-fragment">
@@ -30,9 +30,9 @@
         gl_FragColor=texture2D(u_Sampler,v_Pin);
       }
     </script>
+
     <script type="module">
       import { initShaders } from "../../mod/jsm/Utils.js";
-
       const canvas = document.getElementById("canvas");
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -63,7 +63,6 @@
       const pinByteIndex = posSize * elementBytes;
       //顶点总数
       const sourceSize = source.length / categorySize;
-
       const sourceBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, sourceBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, source, gl.STATIC_DRAW);
@@ -91,7 +90,6 @@
       gl.enableVertexAttribArray(a_Pin);
 
       /* 图像预处理 */
-
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
 
       /* 准备三个角色 */
@@ -99,7 +97,8 @@
       const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
       const image = new Image();
-      image.src = "./images/erha.jpg";
+      image.src = "./images/erha3.jpg";
+      // image.src = './images/erha.jpg'
       image.onload = function () {
         gl.texImage2D(
           gl.TEXTURE_2D,
@@ -111,12 +110,20 @@
         );
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        /*
+          CLAMP_TO_EDGE 翻译过来就是边缘夹紧的意思，可以理解为任意尺寸的图像源都可以被宽高为 1 的 uv 尺寸夹紧。
+
+          注：只有CLAMP_TO_EDGE 才能实现非二次幂图像源的显示，其它的参数都不可以。
+        */
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         const u_Sampler = gl.getUniformLocation(gl.program, "u_Sampler");
         gl.uniform1i(u_Sampler, 0);
 
         render();
       };
+
       //渲染
       function render() {
         gl.clear(gl.COLOR_BUFFER_BIT);

@@ -92,6 +92,16 @@ function GetIndexInGrid(w, size) {
   };
 }
 
+/* 对Image 加载事件的封装 */
+
+function imgPromise(img) {
+  return new Promise((resolve) => {
+    img.onload = function () {
+      resolve(img);
+    };
+  });
+}
+
 export {
   initShaders,
   getMousePosInWebgl,
@@ -99,4 +109,5 @@ export {
   ScaleLinear,
   SinFn,
   GetIndexInGrid,
+  imgPromise,
 };
